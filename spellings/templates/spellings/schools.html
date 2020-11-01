@@ -1,0 +1,15 @@
+{% extends 'spellings/base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+	<h1>Link to your school</h1>
+	<h5>so that you can practice your spellings</h5>
+	<ul>
+		{% for school in schools %}
+		<li>{{ school.last_name }}<a href="{% url 'link' school.id %}">Link</a></li>
+		{% endfor %}
+	</ul>
+{% else %}
+	<p><a href="{% url 'login' %}">Log In</a> | <a href="{% url 'register' %}">Register</a></p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'spellings/base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+	<h1>Profile for {{ student }}</h1>
+	
+	<table>
+	{% for list in word_lists %}
+	<tr>
+		<th colspan=2>Practicing for the test on {{ list.test_date|date:"l jS F Y" }}</th>
+	</tr>
+
+		{% for result in results %}
+		{% if result.word_list == list %}
+		<tr>
+			<td>{{ result.created_date }}</td><td>{{ result.score }}</td>
+		</tr>
+		{% endif %}
+		{% endfor %}
+		<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+	{% endfor %}
+
+	{% if results|length == 0 %}
+		<tr>
+			<td colspan="2"> There are no practice scores for {{ student }} yet.</td>
+		</tr>
+	{% endif %}
+
+	</table>
+
+{% else %}
+	<p><a href="{% url 'login' %}">Log In</a> | <a href="{% url 'register' %}">Register</a></p>
+{% endif %}
+{% endblock %}

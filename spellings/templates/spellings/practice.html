@@ -1,0 +1,143 @@
+{% extends 'spellings/base.html' %}
+
+{% block content %}
+<div id="words" style="display: none;">{{ word_list.words }}</div>
+<section id="test-meta">
+	<h2>Your School: {{ word_list.school.last_name }}</h2>
+	<h3>Test date: {{ word_list.test_date|date:"l jS F Y" }}</h3>
+</section>
+
+<section id="controls">
+	<h4 id="word-count"></h4>
+	<!--
+	<p>Press the start button when you are ready to start your practice session.</p>
+	<button id="start-button" style="cursor: pointer;">Start</button>
+	-->
+	<h4>Word <span id="word-number">1</span> of <span id="word-total"></span></h4>
+	<button id="read">Read the word</button>
+	<form id="attempt">
+		<input type="text" name="text" placeholder="type the word here" id="attempt-input">
+		<input type="submit" value="Submit">
+	</form>
+	<p>Your score: <span id="score">0</span></p>
+	<button id="next">Next word</button>
+</section>
+
+<section id="result" data-user_id="{{ request.user.id }}" data-word_list_id="{{ word_list.id }}" style="display: none;">
+	<h2>Well done!</h2>
+	<p>You scored <span id="final-score"></span></p>
+	<p><a href="">Practice these words again</a></p>
+	<p><a href="{% url 'profile' user.id %}">Look at your practice scores</a></p>
+
+</section>
+
+<script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', function() {
+	
+		// add word list to words array stripping any whitespace
+		const words = document.querySelector('#words').innerText.split(",");
+		document.querySelector('#word-count').innerText = `Includes ${words.length} words`;
+		for(let i = 0; i < words.length; i++) {
+			words[i] = words[i].trim();
+		}
+
+		// initialise counters
+		let word_counter = 0;
+		// let completed = false;
+		let score = 0;
+		let attempts = 0;
+
+		// add event listeners
+		document.querySelector('#next').onclick = next_word;
+		document.querySelector('#read').onclick = read_word;
+		document.querySelector('#attempt').onsubmit = check_answer;
+
+		// initial page setup
+		document.querySelector('#word-total').innerText = words.length;
+
+		function next_word() {
+			if (word_counter === words.length - 1) {
+				return final_screen();
+			}
+			word_counter++;
+			document.querySelector('#word-number').innerText = word_counter + 1;
+			read_word();
+		}
+
+		function read_word() {
+			if ('speechSynthesis' in window) {
+				const synth = speechSynthesis;
+				const phrase = `How do you spell ... ${words[word_counter]}?`;
+				let utterance = new SpeechSynthesisUtterance(phrase);
+				synth.speak(utterance);
+			} else {
+				alert('Sorry, speech synthesis is not supported by your computer\'s operating system.');
+			}
+		}
+
+		function check_answer(event) {
+			event.preventDefault();
+			attempt = event.target.text.value.toLowerCase();
+			if (attempt === words[word_counter]) {
+				update_score();
+				clear_input();
+				attempts = 0;
+				update_screen();
+				return next_word();
+			} else {
+				if (attempts === 2) {
+					alert("Sorry, you didn't get that word.\nMoving on to the next one.");
+					clear_input();
+					attempts = 0;
+					return next_word();
+				}
+				const attempts_remaining = 2 - attempts;
+				alert(`Not quite. Try again\nYou can have ${attempts_remaining} more tries.`);
+				clear_input();
+				attempts++;
+			}
+		}
+
+		function update_score() {
+			const points = 3 - attempts;
+			alert(`Correct! ${points} points`);
+			score += points;
+		}
+
+		function update_screen() {
+			document.querySelector('#score').innerText = score;
+
+		}
+
+		function clear_input() {
+			document.querySelector('#attempt-input').value = "";
+		}
+
+		function final_screen() {
+			document.querySelector('#final-score').innerText = `${score} points.`;
+			document.querySelector('#controls').style.display = 'none';
+			document.querySelector('#result').style.display = 'block';
+			save_result();
+		}
+
+		function save_result() {
+			// send POST fetch request to save_result view with all necessary data
+			fetch('/save_result', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					student_id: document.querySelector('#result').dataset.user_id,
+					word_list_id: document.querySelector('#result').dataset.word_list_id,
+					score: score
+				})
+			})
+			.then(response => response.json())
+		}
+
+	});
+		
+</script>
+
+{% endblock %}

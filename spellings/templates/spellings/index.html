@@ -1,0 +1,36 @@
+{% extends 'spellings/base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+	
+	{% if user.is_teacher %}
+		<h3>Your linked students</h3>
+		<ul>
+		{% for link in links %}
+			<li><a href="{% url 'profile' link.student.id %}">{{ link.student }}</a></li>
+		{% empty %}
+			<li>Ask your students to log in and link to your school</li>
+		{% endfor %}
+		</ul>
+		<p><a href="{% url 'add_word_list' %}">Add a new list of words</a>.</p>
+	{% else %}
+		<h3>Latest word lists from your school</h3>
+		<table>
+			<tr>
+				<th>Click the date to practice</th>
+			</tr>
+			{% for list in word_lists %}
+			<tr>
+				<td><a href="{% url 'practice' list.id %}">{{ list.test_date|date:"l jS F Y" }}</a></td>
+			</tr>
+			{% empty %}
+			<tr>
+				<td>Go <a href="{% url 'schools' %}">here</a> to link to your school.</td>
+			</tr>
+			{% endfor %}	
+		</table>
+		
+	{% endif %}
+
+{% endif %}
+{% endblock %}

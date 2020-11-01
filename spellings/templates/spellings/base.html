@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Speller</title>
+    <script></script>
+  </head>
+  <body>
+  <div class="container">
+    <header>
+      <h1 class="brand"><a href="{% url 'index' %}">Speller</a></h1>
+      <nav>
+        <ul>
+          {% if user.is_authenticated %}
+          <li>Logged in as: <strong>{{ user.username }}</strong></li>
+          <li><a href="{% url 'profile' user.id %}">Profile</a></li>
+          <li><a href="{% url 'logout' %}">Log out</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </header>
+    <main>
+    	{% block content %}
+    	{% endblock %}
+    </main>
+  </div>
+  </body>
+</html>
